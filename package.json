@@ -1,0 +1,22 @@
+{
+  "name": "campus-toolkit",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Suite de herramientas PWA para estudiantes universitarios: archivos, accesibilidad y productividad, 100% desplegable en GitHub Pages.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "vite": "^5.4.11",
+    "vite-plugin-pwa": "^0.21.1"
+  }
+}

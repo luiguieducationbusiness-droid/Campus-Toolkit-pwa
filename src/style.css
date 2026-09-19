@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  ::selection {
+    background: theme('colors.amber');
+    color: theme('colors.ink');
+  }
+  :focus-visible {
+    outline: 2px solid theme('colors.accent');
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .nav-tab {
+    @apply w-full flex items-center gap-3 px-5 py-3 text-left text-sm border-l-4 border-transparent text-graphite hover:bg-paper hover:text-ink transition-colors;
+  }
+  .nav-tab.active {
+    @apply border-accent text-ink bg-paper font-medium;
+  }
+  .nav-group-label {
+    @apply px-5 pt-4 pb-1 text-[11px] tracking-wide text-graphite/70;
+  }
+  .card {
+    @apply bg-white border border-line rounded p-5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded px-4 py-2.5 text-sm font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white border-accent hover:bg-accentDark;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink border-line hover:border-ink;
+  }
+  .field-label {
+    @apply block text-sm font-medium text-ink mb-1.5;
+  }
+  .field {
+    @apply w-full border border-line rounded px-3 py-2 text-sm bg-white focus:border-accent;
+  }
+  .drop-zone {
+    @apply border-2 border-dashed border-line rounded-lg p-8 text-center text-sm text-graphite hover:border-accent hover:bg-white transition-colors cursor-pointer;
+  }
+  .module-title {
+    @apply font-display text-3xl font-semibold mb-1;
+  }
+  .module-sub {
+    @apply text-graphite text-sm mb-6;
+  }
+  .pill {
+    @apply inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium;
+  }
+}

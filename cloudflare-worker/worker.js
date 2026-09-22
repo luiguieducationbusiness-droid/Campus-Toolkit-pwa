@@ -8,6 +8,7 @@
  * Rutas:
  *   POST /pdf-to-word   -> reenvía el PDF a CloudConvert y devuelve el .docx
  *   POST /translate     -> reenvía el texto a DeepL y devuelve la traducción
+ *   POST /youtube-transcript -> obtiene subtítulos públicos de YouTube
  *
  * Despliegue (resumen, ver README principal para el detalle):
  *   1. npm install -g wrangler
@@ -43,6 +44,9 @@ export default {
       }
       if (url.pathname === '/translate' && request.method === 'POST') {
         return withCors(await handleTranslate(request, env));
+      }
+      if (url.pathname === '/youtube-transcript' && request.method === 'POST') {
+        return withCors(await handleYoutubeTranscript(request));
       }
       return withCors(new Response('Ruta no encontrada', { status: 404 }));
     } catch (err) {
@@ -129,4 +133,62 @@ async function handleTranslate(request, env) {
   return new Response(JSON.stringify({ translation }), {
     headers: { 'Content-Type': 'application/json' }
   });
+}
+
+// --- Subtítulos públicos de YouTube --------------------------------------------
+async function handleYoutubeTranscript(request) {
+  const { url, lang = 'es' } = await request.json();
+  const videoId = getYoutubeVideoId(url);
+  if (!videoId) return jsonResponse({ error: 'El enlace de YouTube no es válido.' }, 400);
+
+  const pageResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    headers: { 'User-Agent': 'Mozilla/5.0' }
+  });
+  if (!pageResponse.ok) return jsonResponse({ error: 'YouTube no permitió consultar ese video.' }, 502);
+  const page = await pageResponse.text();
+  const playerResponse = readPlayerResponse(page);
+  const tracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+  const track = tracks.find(item => item.languageCode === lang) || tracks.find(item => item.languageCode?.startsWith(`${lang}-`)) || tracks[0];
+  if (!track?.baseUrl) return jsonResponse({ error: 'El video no tiene subtítulos públicos disponibles.' }, 404);
+
+  const captionsResponse = await fetch(`${track.baseUrl}&fmt=srv3`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!captionsResponse.ok) return jsonResponse({ error: 'No se pudieron descargar los subtítulos.' }, 502);
+  const captions = await captionsResponse.text();
+  const transcript = parseCaptionXml(captions);
+  if (!transcript) return jsonResponse({ error: 'Los subtítulos están vacíos.' }, 404);
+  return jsonResponse({ title: playerResponse.videoDetails?.title || '', language: track.languageCode, transcript });
+}
+
+function getYoutubeVideoId(value) {
+  try {
+    const parsed = new URL(value);
+    if (!['www.youtube.com', 'youtube.com', 'm.youtube.com', 'youtu.be'].includes(parsed.hostname)) return '';
+    return parsed.hostname === 'youtu.be' ? parsed.pathname.slice(1) : parsed.searchParams.get('v') || '';
+  } catch {
+    return '';
+  }
+}
+
+function readPlayerResponse(page) {
+  const marker = 'var ytInitialPlayerResponse = ';
+  const start = page.indexOf(marker);
+  if (start < 0) return null;
+  const jsonStart = start + marker.length;
+  const end = page.indexOf(';', jsonStart);
+  try { return JSON.parse(page.slice(jsonStart, end)); } catch { return null; }
+}
+
+function parseCaptionXml(xml) {
+  return [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)]
+    .map(match => decodeXml(match[1]).replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+function decodeXml(value) {
+  return value.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"');
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 }

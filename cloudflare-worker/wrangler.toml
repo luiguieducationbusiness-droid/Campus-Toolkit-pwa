@@ -5,4 +5,4 @@ compatibility_date = "2024-11-01"
 # Las API keys NO van aquí (este archivo se sube a git).
 # Configúralas como secrets con:
 #   wrangler secret put CLOUDCONVERT_API_KEY
-#   wrangler secret put DEEPL_API_KEY
+# La ruta /youtube-transcript no requiere una API key de YouTube.

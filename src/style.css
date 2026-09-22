@@ -41,6 +41,23 @@
   .field {
     @apply w-full border border-line rounded px-3 py-2 text-sm bg-white focus:border-accent;
   }
+  .field-help {
+    @apply text-xs text-graphite mt-1;
+  }
+  .reference-output,
+  .reference-entry {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+  .reference-list {
+    margin-left: 2.54cm;
+    margin-right: 2.54cm;
+  }
+  .reference-entry {
+    padding-left: 1.27cm;
+    text-indent: -1.27cm;
+  }
   .drop-zone {
     @apply border-2 border-dashed border-line rounded-lg p-8 text-center text-sm text-graphite hover:border-accent hover:bg-white transition-colors cursor-pointer;
   }

@@ -1,6 +1,4 @@
 import { downloadBlob, setStatus } from '../shared.js';
-
-const TRANSLATE_PROXY_KEY = 'campus-toolkit:translate-proxy-url';
 const LANGS = [
   { code: 'es', label: 'Español' },
   { code: 'en', label: 'Inglés' },
@@ -14,7 +12,7 @@ export function mountTranscription(container) {
 
   container.innerHTML = `
     <p class="module-title">Transcripción y traducción en vivo</p>
-    <p class="module-sub">Transcribe la voz del profesor en tiempo real usando el reconocimiento de voz del navegador (100% local). La traducción es opcional y usa un servicio externo.</p>
+    <p class="module-sub">Transcribe la voz del profesor en tiempo real con el reconocimiento del navegador. La traducción opcional usa Google Translate directamente.</p>
 
     ${!SpeechRecognition ? `
       <div class="card border-bad/40 bg-bad/5">
@@ -35,10 +33,6 @@ export function mountTranscription(container) {
               ${LANGS.map(l => `<option value="${l.code}">${l.label}</option>`).join('')}
             </select>
           </div>
-        </div>
-        <div class="mt-3">
-          <label class="field-label" for="translate-proxy">URL de proxy de traducción (si vas a traducir)</label>
-          <input id="translate-proxy" type="url" class="field" placeholder="https://tu-worker.tu-cuenta.workers.dev/translate" />
         </div>
       </div>
 
@@ -63,11 +57,7 @@ export function mountTranscription(container) {
   const transcriptEl = container.querySelector('#transcript');
   const langIn = container.querySelector('#lang-in');
   const langOut = container.querySelector('#lang-out');
-  const proxyInput = container.querySelector('#translate-proxy');
   const status = container.querySelector('#status');
-
-  proxyInput.value = localStorage.getItem(TRANSLATE_PROXY_KEY) || '';
-  proxyInput.addEventListener('change', () => localStorage.setItem(TRANSLATE_PROXY_KEY, proxyInput.value.trim()));
 
   let recognition = null;
   let listening = false;
@@ -112,20 +102,22 @@ export function mountTranscription(container) {
   }
 
   async function translateLine(text) {
-    const proxyUrl = proxyInput.value.trim();
-    if (!proxyUrl) { setStatus(status, 'Configura la URL del proxy de traducción para traducir.', 'bad'); return; }
+    if (langIn.value === langOut.value) {
+      appendLine(text, true);
+      return;
+    }
     try {
-      const res = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, source: langIn.value, target: langOut.value })
-      });
+      setStatus(status, 'Traduciendo…', 'good');
+      const params = new URLSearchParams({ client: 'gtx', sl: langIn.value, tl: langOut.value, dt: 't', q: text });
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?${params}`);
       if (!res.ok) throw new Error(`El servicio respondió ${res.status}`);
       const data = await res.json();
-      appendLine(data.translation || '(sin traducción)', true);
+      const translation = Array.isArray(data?.[0]) ? data[0].map(segment => segment?.[0] || '').join('').trim() : '';
+      appendLine(translation || '(sin traducción)', true);
+      setStatus(status, 'Escuchando…', 'good');
     } catch (err) {
       console.error(err);
-      setStatus(status, 'No se pudo traducir esa frase: ' + err.message, 'bad');
+      setStatus(status, 'No se pudo traducir esa frase. Revisa tu conexión a Internet.', 'bad');
     }
   }
 

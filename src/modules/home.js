@@ -12,6 +12,10 @@ export function mountHome(container) {
         <p class="font-display text-lg font-semibold">Accesibilidad y clases</p>
         <p class="text-sm text-graphite mt-1">Transcribe la clase en vivo y tradúcela línea por línea.</p>
       </a>
+      <a href="#youtube-transcripcion" class="card hover:border-accent transition-colors">
+        <p class="font-display text-lg font-semibold">Transcribir YouTube</p>
+        <p class="text-sm text-graphite mt-1">Convierte los subtítulos disponibles de un video en material de estudio.</p>
+      </a>
       <a href="#apa" class="card hover:border-accent transition-colors">
         <p class="font-display text-lg font-semibold">Citas APA / Harvard</p>
         <p class="text-sm text-graphite mt-1">Arma tus referencias bibliográficas y cópialas al portapapeles.</p>
@@ -26,8 +30,8 @@ export function mountHome(container) {
       <p class="text-sm font-medium">Cómo funciona esta app</p>
       <p class="text-sm text-graphite mt-1.5 leading-relaxed">
         La mayoría de módulos procesa tus archivos <strong>directamente en tu navegador</strong> (nada se sube a internet).
-        Solo "PDF a Word" y la traducción en vivo necesitan un servicio externo — están marcados y requieren que
-        configures un proxy propio (ver <code class="text-xs">README.md</code>) antes de usarlos.
+        "PDF a Word" y la transcripción de YouTube requieren un Worker propio; la traducción en vivo usa Google Translate
+        directamente y solo necesita conexión a internet.
       </p>
     </div>
   `;

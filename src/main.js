@@ -7,6 +7,7 @@ import { mountMergePdf } from './modules/files/mergePdf.js';
 import { mountImageConverter } from './modules/files/imageConverter.js';
 import { mountPdfToWord } from './modules/files/pdfToWord.js';
 import { mountTranscription } from './modules/clase/transcription.js';
+import { mountYoutubeTranscript } from './modules/clase/youtubeTranscript.js';
 import { mountApaGenerator } from './modules/productividad/apaGenerator.js';
 import { mountKanban } from './modules/productividad/kanban.js';
 import { mountIdeaVault } from './modules/productividad/ideaVault.js';
@@ -27,7 +28,8 @@ const routes = [
     { id: 'pdf-a-word', label: 'PDF a Word', mount: mountPdfToWord }
   ]},
   { group: 'Accesibilidad y clases', items: [
-    { id: 'transcripcion', label: 'Transcripción y traducción en vivo', mount: mountTranscription }
+    { id: 'transcripcion', label: 'Transcripción y traducción en vivo', mount: mountTranscription },
+    { id: 'youtube-transcripcion', label: 'Transcribir YouTube', mount: mountYoutubeTranscript }
   ]},
   { group: 'Desarrollo personal', items: [
     { id: 'apa', label: 'Generador APA / Harvard', mount: mountApaGenerator },

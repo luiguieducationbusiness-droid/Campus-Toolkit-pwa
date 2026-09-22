@@ -3,13 +3,15 @@ import { createDropZone, downloadBlob, setStatus } from '../shared.js';
 const FORMATS = [
   { value: 'image/png', label: 'PNG', ext: 'png' },
   { value: 'image/jpeg', label: 'JPG', ext: 'jpg' },
-  { value: 'image/webp', label: 'WebP', ext: 'webp' }
+  { value: 'image/webp', label: 'WebP', ext: 'webp' },
+  { value: 'image/avif', label: 'AVIF', ext: 'avif' },
+  { value: 'image/svg+xml', label: 'SVG', ext: 'svg' }
 ];
 
 export function mountImageConverter(container) {
   container.innerHTML = `
     <p class="module-title">Convertir imágenes</p>
-    <p class="module-sub">Cambia el formato de tus imágenes (PNG, JPG, WebP) directamente en el navegador, sin subirlas a ningún servidor.</p>
+    <p class="module-sub">Cambia el formato de tus imágenes (JPG, JPEG, PNG, WebP, AVIF o SVG) directamente en el navegador, sin subirlas a ningún servidor.</p>
 
     <label class="field-label" for="format">Formato de salida</label>
     <select id="format" class="field mb-4" style="max-width:220px">
@@ -63,7 +65,7 @@ export function mountImageConverter(container) {
   }
 
   async function convert(file, mime) {
-    const bitmap = await createImageBitmap(file);
+    const bitmap = await loadImage(file);
     const canvas = document.createElement('canvas');
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
@@ -74,8 +76,35 @@ export function mountImageConverter(container) {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     ctx.drawImage(bitmap, 0, 0);
+
+    if (mime === 'image/svg+xml') {
+      if (bitmap.close) bitmap.close();
+      const imageData = canvas.toDataURL('image/png');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${canvas.width} ${canvas.height}"><image width="100%" height="100%" href="${imageData}"/></svg>`;
+      return new Blob([svg], { type: mime });
+    }
+
     return new Promise((resolve, reject) => {
-      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Conversión no soportada por este navegador')), mime, 0.92);
+      canvas.toBlob(blob => {
+        if (bitmap.close) bitmap.close();
+        blob ? resolve(blob) : reject(new Error('Conversión no soportada por este navegador'));
+      }, mime, 0.92);
     });
+  }
+
+  async function loadImage(file) {
+    try {
+      return await createImageBitmap(file);
+    } catch {
+      const url = URL.createObjectURL(file);
+      try {
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        return image;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
   }
 }
